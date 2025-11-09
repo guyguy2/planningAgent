@@ -185,8 +185,31 @@ uv run plancode setup
 # Follow the interactive wizard to configure authentication
 ```
 
-#### Option 4: Claude Code Environment
-When running PlanCode within a Claude Code session, no separate API key is needed. PlanCode will automatically detect the Claude Code environment and use the existing session.
+#### Option 4: Use Within Claude Code (No API Key Needed)
+
+When running PlanCode from within a Claude Code session, no separate API key is required. PlanCode automatically detects the Claude Code environment and uses the existing session.
+
+**How to use:**
+
+1. Start a Claude Code session (at [claude.ai/code](https://claude.ai/code))
+2. Clone or navigate to your PlanCode installation:
+   ```bash
+   git clone <repository-url>
+   cd planningAgent
+   uv sync
+   ```
+3. Run PlanCode commands directly:
+   ```bash
+   uv run plancode "Add health check endpoint" --project ./my-app
+   ```
+
+**Benefits:**
+- ✅ No API key configuration needed
+- ✅ Uses your existing Claude Code subscription
+- ✅ Seamless integration with Claude's environment
+- ✅ Perfect for testing and development
+
+PlanCode will detect environment variables like `CLAUDE_CODE_SESSION`, `ANTHROPIC_SESSION_ID`, or `CLAUDE_AGENT_MODE` to determine it's running in Claude Code.
 
 #### Option 5: Project-Specific Key (Less Secure)
 ```bash
