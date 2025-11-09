@@ -14,7 +14,7 @@ from plancode.agent.prompts import (
     build_system_prompt,
 )
 from plancode.models.plan import ProjectContext
-from plancode.tools import execution, filesystem, workflow
+from plancode.tools import analysis, execution, filesystem, workflow
 from plancode.ui import display
 
 console = Console()
@@ -101,6 +101,42 @@ def create_tool_definitions() -> list[dict]:
         {
             "name": "get_file_imports",
             "description": "Extract import statements from a file (supports Python, JavaScript, Java).",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to the file (relative to project root)",
+                    },
+                },
+                "required": ["file_path"],
+            },
+        },
+        {
+            "name": "analyze_python_file",
+            "description": "Deep AST-based analysis of a Python file. Extracts classes, methods, functions, imports, decorators, and complexity metrics.",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "Path to the Python file (relative to project root)",
+                    },
+                },
+                "required": ["file_path"],
+            },
+        },
+        {
+            "name": "get_project_summary",
+            "description": "Comprehensive project analysis: tech stack, frameworks, build tools, testing frameworks, databases, and architecture patterns.",
+            "input_schema": {
+                "type": "object",
+                "properties": {},
+            },
+        },
+        {
+            "name": "find_related_files",
+            "description": "Find files related to a given file through imports and dependencies.",
             "input_schema": {
                 "type": "object",
                 "properties": {
@@ -273,6 +309,46 @@ def execute_tool(tool_name: str, tool_input: dict, project_path: Path) -> Any:
             file_path = project_path / tool_input["file_path"]
             return filesystem.get_file_imports(file_path)
 
+        # Analysis tools
+        elif tool_name == "analyze_python_file":
+            result = analysis.analyze_python_file(tool_input["file_path"], project_path)
+            if result.get("error"):
+                display.display_error(f"Failed to analyze {tool_input['file_path']}", result["error"])
+            else:
+                display.display_success(f"Analyzed Python file: {tool_input['file_path']}")
+                # Display key metrics
+                if result.get("classes"):
+                    display.display_info(f"Found {len(result['classes'])} classes")
+                if result.get("functions"):
+                    display.display_info(f"Found {len(result['functions'])} functions")
+            return result
+
+        elif tool_name == "get_project_summary":
+            result = analysis.get_project_summary(project_path)
+            if result.get("error"):
+                display.display_error("Failed to analyze project", result["error"])
+            else:
+                display.display_success("Project analysis complete")
+                # Display key findings
+                if result.get("frameworks"):
+                    display.display_info(f"Frameworks: {', '.join(result['frameworks'])}")
+                if result.get("languages"):
+                    langs = ", ".join([f"{k}: {v} files" for k, v in result["languages"].items()])
+                    display.display_info(f"Languages: {langs}")
+            return result
+
+        elif tool_name == "find_related_files":
+            result = analysis.find_related_files(tool_input["file_path"], project_path)
+            if result.get("error"):
+                display.display_error("Failed to find related files", result["error"])
+            else:
+                imports_count = len(result.get("imports_from_this_file", []))
+                importers_count = len(result.get("files_that_import_this", []))
+                display.display_info(
+                    f"Found {imports_count} imports, {importers_count} files that import this file"
+                )
+            return result
+
         # Workflow tools
         elif tool_name == "ask_developer_for_approval":
             result = workflow.ask_developer_for_approval(
@@ -360,36 +436,42 @@ def analyze_project(project_path: Path) -> ProjectContext:
     """Analyze the project to build context."""
     display.display_info("Analyzing project structure...")
 
-    # Get project structure
-    structure = filesystem.list_project_structure(project_path, max_depth=2)
+    # Get comprehensive project summary using new analysis tools
+    summary = analysis.get_project_summary(project_path)
 
     # Determine primary language
-    languages = structure.get("languages", {})
-    primary_language = max(languages.items(), key=lambda x: x[1])[0] if languages else "Unknown"
+    languages = summary.get("languages", {})
+    if languages:
+        # Find language with most files
+        primary_language = max(languages.items(), key=lambda x: x[1])[0] if languages else "Unknown"
+        # Clean up extension to just language name
+        lang_map = {".py": "Python", ".js": "JavaScript", ".ts": "TypeScript",
+                   ".java": "Java", ".go": "Go", ".rs": "Rust", ".rb": "Ruby"}
+        primary_language = lang_map.get(primary_language, primary_language.lstrip("."))
+    else:
+        primary_language = "Unknown"
 
-    # Detect framework (simple heuristics)
-    framework = "various frameworks"
-    tech_stack = []
+    # Get framework(s)
+    frameworks = summary.get("frameworks", [])
+    framework = frameworks[0] if frameworks else "various frameworks"
 
-    # Check for common files
-    if (project_path / "package.json").exists():
-        tech_stack.append("Node.js")
-        if (project_path / "next.config.js").exists():
-            framework = "Next.js"
-        elif (project_path / "angular.json").exists():
-            framework = "Angular"
+    # Get tech stack
+    tech_stack = summary.get("build_tools", [])
+    if frameworks:
+        tech_stack.extend(frameworks)
+    if summary.get("testing_frameworks"):
+        tech_stack.extend(summary.get("testing_frameworks", []))
 
-    if (project_path / "pyproject.toml").exists() or (project_path / "setup.py").exists():
-        tech_stack.append("Python")
+    # Remove duplicates
+    tech_stack = list(set(tech_stack))
 
-    if (project_path / "pom.xml").exists():
-        tech_stack.append("Maven")
-        framework = (
-            "Spring Boot" if "spring" in (project_path / "pom.xml").read_text().lower() else "Java"
-        )
-
-    if (project_path / "build.gradle").exists():
-        tech_stack.append("Gradle")
+    # Display summary
+    if frameworks:
+        display.display_info(f"Detected frameworks: {', '.join(frameworks)}")
+    if summary.get("databases"):
+        display.display_info(f"Databases: {', '.join(summary['databases'])}")
+    if summary.get("architecture_indicators"):
+        display.display_info(f"Architecture: {', '.join(summary['architecture_indicators'][:3])}")
 
     return ProjectContext(
         path=str(project_path),

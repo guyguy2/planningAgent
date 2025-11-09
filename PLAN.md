@@ -295,7 +295,7 @@ plancode/
 
 ## Implementation Progress
 
-**Last Updated:** 2025-11-08
+**Last Updated:** 2025-11-09
 
 ### ✅ Completed (Week 1 - Core Foundation)
 
@@ -358,20 +358,60 @@ plancode/
 
 #### 9. Agent Loop (`plancode/agent/loop.py`)
 - ✅ Claude API integration with tool use
-- ✅ 12 tool definitions for Claude
+- ✅ 12 tool definitions for Claude (expanded to 15 in Week 2)
 - ✅ Tool execution dispatcher
 - ✅ Project analysis and context building
 - ✅ Main planning agent loop with progress UI
 - ✅ Error handling and iteration limits
 
-### 🚧 In Progress / Next Steps
+### ✅ Completed (Week 2 - Advanced Analysis)
 
-#### Week 2: Analysis & Persistence
-- [ ] Enhanced project analysis (AST-based for Python)
+#### 10. Advanced Code Analysis (`plancode/tools/analysis.py`)
+- ✅ AST-based Python file analysis with `analyze_python_file()`
+  - Extracts classes with methods, decorators, base classes
+  - Extracts functions with parameters, decorators, async status
+  - Categorizes imports (stdlib, third-party, local)
+  - Extracts global variables and docstrings
+  - Estimates complexity metrics
+- ✅ Comprehensive project summary with `get_project_summary()`
+  - Auto-detects languages and file counts
+  - Identifies frameworks (Django, Flask, FastAPI, React, etc.)
+  - Detects build tools (pip, npm, maven, gradle, cargo)
+  - Discovers testing frameworks (pytest, jest, etc.)
+  - Identifies databases from dependencies
+  - Detects architecture patterns from directory structure
+  - Parses requirements.txt, pyproject.toml, package.json
+- ✅ Dependency analysis with `find_related_files()`
+  - Finds files that import a given file
+  - Lists imports from a given file
+  - Enables impact analysis for changes
+
+#### 11. Enhanced Agent Loop Integration
+- ✅ Added 3 new tool definitions (total: 15 tools)
+- ✅ Integrated analysis tools into tool dispatcher
+- ✅ Updated `analyze_project()` to use `get_project_summary()`
+- ✅ Rich terminal feedback for analysis operations
+- ✅ Proper error handling for AST parsing
+
+#### 12. System Prompt Enhancements (`plancode/agent/prompts.py`)
+- ✅ Updated Phase 1 (ANALYZE) to recommend new tools
+- ✅ Added "Advanced Analysis Tools" section
+- ✅ Guidance on when to use AST-based vs. basic tools
+- ✅ Better workflow for Python projects
+
+#### 13. Testing & Validation
+- ✅ Created comprehensive test script (`test_analysis.py`)
+- ✅ Validated all 3 analysis tools on plancode project
+- ✅ Verified AST parsing correctness
+- ✅ Confirmed project summary accuracy
+- ✅ Tested dependency relationship detection
+
+### 🚧 Week 2: Remaining Items
+
 - [ ] Java/Spring Boot specific analysis tools
-- [ ] Resume plan functionality (partially implemented)
-- [ ] Plan auto-save during execution
-- [ ] Better error recovery and rollback
+- [ ] Enhanced resume plan functionality (restore full conversation state)
+- [ ] Improved plan auto-save during execution
+- [ ] Better error recovery and rollback mechanisms
 
 #### Week 3: Polish & Documentation
 - [ ] Comprehensive testing suite
@@ -383,15 +423,17 @@ plancode/
 
 ### 📊 Status Summary
 
-**Core Functionality:** ~85% complete
+**Core Functionality:** ~90% complete
 - ✅ CLI framework
-- ✅ Tool definitions
+- ✅ Tool definitions (15 tools total)
 - ✅ Agent loop
 - ✅ Approval workflow
 - ✅ File operations
 - ✅ Test/build/lint execution
+- ✅ Advanced AST analysis for Python
+- ✅ Comprehensive project analysis
 - ⚠️ Resume functionality (basic implementation)
-- ❌ Advanced AST analysis
+- ❌ Java/Spring Boot specific analysis
 
 **Next Milestone:** Test the MVP with a real task!
 
