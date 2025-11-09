@@ -29,19 +29,16 @@ def is_running_in_claude_code() -> bool:
     Returns:
         True if running in Claude Code, False otherwise
     """
-    # Check for Claude Code specific environment variables
-    # Note: These are hypothetical - adjust based on actual Claude Code env vars
-    claude_code_indicators = [
-        "CLAUDE_CODE_SESSION",
-        "ANTHROPIC_SESSION_ID",
-        "CLAUDE_AGENT_MODE",
-    ]
+    # Check for actual Claude Code environment variables
+    # CLAUDECODE=1 is set in Claude Code sessions
+    # CLAUDE_CODE_ENTRYPOINT indicates the entry point (e.g., 'cli')
+    if os.getenv("CLAUDECODE") == "1":
+        return True
 
-    for indicator in claude_code_indicators:
-        if os.getenv(indicator):
-            return True
+    if os.getenv("CLAUDE_CODE_ENTRYPOINT"):
+        return True
 
-    # Check for parent process name containing 'claude'
+    # Fallback: Check for parent process name containing 'claude'
     # This is a heuristic and may need adjustment
     try:
         import psutil
