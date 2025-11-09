@@ -13,8 +13,10 @@ PlanCode is a Python CLI tool that uses Claude's API to implement a **Plan-First
 # Install dependencies with uv
 uv sync
 
-# Set API key
-export ANTHROPIC_API_KEY=your_key_here
+# Set up authentication (multiple options available)
+uv run plancode setup  # Interactive wizard
+# OR
+export ANTHROPIC_API_KEY=your_key_here  # Direct env var
 ```
 
 ### Running PlanCode
@@ -129,10 +131,11 @@ Beautiful terminal interface using Rich library:
 ```
 plancode/
 ├── cli/
-│   └── main.py              # Typer CLI entry point, commands: plan, init, version
+│   └── main.py              # Typer CLI entry point, commands: plan, init, setup, version
 ├── agent/
 │   ├── loop.py              # Agent execution loop, tool definitions, tool dispatcher
 │   └── prompts.py           # System prompt templates (enforces methodology)
+├── auth.py                  # Flexible authentication with multiple sources
 ├── tools/
 │   ├── filesystem.py        # File operations and codebase analysis
 │   ├── workflow.py          # Approval and plan management
@@ -199,11 +202,33 @@ plancode/
 - Example projects and walkthroughs
 - Performance optimization
 
+## Authentication Architecture
+
+PlanCode implements flexible authentication through `plancode/auth.py`:
+
+### Authentication Sources (Priority Order)
+1. **ANTHROPIC_API_KEY** environment variable (most secure)
+2. **ANTHROPIC_API_KEY_FILE** environment variable (points to file with key)
+3. **Claude Code environment detection** (no key needed when running in Claude Code)
+4. **.plancode/api_key** file in project directory (less secure, for testing)
+5. **Interactive prompt** (optional, not saved)
+
+### Key Functions
+- `get_api_key()` - Main function that tries all sources in order
+- `is_running_in_claude_code()` - Detects Claude Code environment
+- `setup_api_key_interactive()` - Interactive setup wizard
+- `validate_api_key()` - Validates key format
+
+### CLI Integration
+- `plancode setup` - Interactive authentication setup wizard
+- API key passed through to `run_planning_agent()` and `resume_plan()`
+- Helpful error messages guide users when authentication fails
+
 ## Configuration Files
 
 - `pyproject.toml` - Project metadata, dependencies, tool configuration
 - `.plancode/` - Created by `plancode init`, stores saved plans (git-ignored)
-- `ANTHROPIC_API_KEY` - Required environment variable
+- `.plancode/api_key` - Optional project-specific API key (if using that auth method)
 
 ## Known Limitations
 

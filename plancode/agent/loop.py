@@ -495,10 +495,13 @@ def run_planning_agent(
     model: str,
     analyze_only: bool = False,
     save_plan_path: Optional[Path] = None,
+    api_key: Optional[str] = None,
 ):
     """Run the main planning agent loop."""
     # Initialize Claude client
-    client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    # Use provided api_key or fall back to environment variable
+    effective_api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+    client = anthropic.Anthropic(api_key=effective_api_key)
 
     # Analyze project
     project_context = analyze_project(project_path)
@@ -591,9 +594,13 @@ def run_planning_agent(
             display.display_warning(f"Reached maximum iterations ({max_iterations})")
 
 
-def resume_plan(plan_path: Path, project_path: Path, model: str):
+def resume_plan(plan_path: Path, project_path: Path, model: str, api_key: Optional[str] = None):
     """Resume execution of a saved plan."""
     display.display_info(f"Loading plan from {plan_path}")
+
+    # Initialize Claude client if needed (when resume is fully implemented)
+    # effective_api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+    # client = anthropic.Anthropic(api_key=effective_api_key)
 
     plan = workflow.load_plan(plan_path)
     if not plan:
