@@ -159,9 +159,14 @@ def read_file(file_path: Path, max_lines: Optional[int] = None) -> dict:
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             if max_lines:
-                lines = [next(f) for _ in range(max_lines) if f]
+                lines = []
+                for _ in range(max_lines):
+                    try:
+                        lines.append(next(f))
+                    except StopIteration:
+                        break
                 content = "".join(lines)
-                truncated = True
+                truncated = len(lines) == max_lines
             else:
                 content = f.read()
                 truncated = False
