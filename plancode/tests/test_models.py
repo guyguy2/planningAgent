@@ -1,9 +1,5 @@
 """Tests for Pydantic models."""
 
-from datetime import datetime
-
-import pytest
-
 from plancode.models.plan import (
     ApprovalResponse,
     Complexity,

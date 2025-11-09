@@ -104,7 +104,7 @@ def display_phase(phase: Phase, number: int = None):
 
     # Key changes
     if phase.key_changes:
-        console.print(f"   Key Changes:")
+        console.print("   Key Changes:")
         for change in phase.key_changes[:3]:
             console.print(f"     • {change}")
         if len(phase.key_changes) > 3:

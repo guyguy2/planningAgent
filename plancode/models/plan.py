@@ -36,6 +36,8 @@ class FileChange(BaseModel):
 class TestStrategy(BaseModel):
     """Testing strategy for a phase."""
 
+    __test__ = False  # Tell pytest not to collect this as a test class
+
     test_files: list[str] = Field(default_factory=list, description="Test files to run")
     commands: list[str] = Field(default_factory=list, description="Test commands to execute")
     description: str = Field(default="", description="Testing approach description")

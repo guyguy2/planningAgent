@@ -1,7 +1,6 @@
 """Main agent execution loop using Claude's tool-use API."""
 
 import os
-import uuid
 from pathlib import Path
 from typing import Any, Optional
 
@@ -10,7 +9,6 @@ from rich.console import Console
 
 from plancode.agent.prompts import (
     build_analysis_only_prompt,
-    build_resume_prompt,
     build_system_prompt,
 )
 from plancode.models.plan import ProjectContext
@@ -313,7 +311,9 @@ def execute_tool(tool_name: str, tool_input: dict, project_path: Path) -> Any:
         elif tool_name == "analyze_python_file":
             result = analysis.analyze_python_file(tool_input["file_path"], project_path)
             if result.get("error"):
-                display.display_error(f"Failed to analyze {tool_input['file_path']}", result["error"])
+                display.display_error(
+                    f"Failed to analyze {tool_input['file_path']}", result["error"]
+                )
             else:
                 display.display_success(f"Analyzed Python file: {tool_input['file_path']}")
                 # Display key metrics
@@ -445,8 +445,15 @@ def analyze_project(project_path: Path) -> ProjectContext:
         # Find language with most files
         primary_language = max(languages.items(), key=lambda x: x[1])[0] if languages else "Unknown"
         # Clean up extension to just language name
-        lang_map = {".py": "Python", ".js": "JavaScript", ".ts": "TypeScript",
-                   ".java": "Java", ".go": "Go", ".rs": "Rust", ".rb": "Ruby"}
+        lang_map = {
+            ".py": "Python",
+            ".js": "JavaScript",
+            ".ts": "TypeScript",
+            ".java": "Java",
+            ".go": "Go",
+            ".rs": "Rust",
+            ".rb": "Ruby",
+        }
         primary_language = lang_map.get(primary_language, primary_language.lstrip("."))
     else:
         primary_language = "Unknown"
@@ -601,7 +608,7 @@ def resume_plan(plan_path: Path, project_path: Path, model: str):
     plan_summary += f"Phases: {len(plan.phases)}\n"
     plan_summary += f"Completed: {sum(1 for p in plan.phases if p.status == 'completed')}"
 
-    resume_prompt = build_resume_prompt(plan_summary)
+    # TODO: Use build_resume_prompt(plan_summary) when resume is fully implemented
 
     # Continue with agent loop
     # (Implementation similar to run_planning_agent)

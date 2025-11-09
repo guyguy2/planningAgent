@@ -7,7 +7,7 @@ Provides deep code understanding for Python, JavaScript, Java, and other languag
 import ast
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List
 from collections import defaultdict
 
 from .filesystem import should_ignore, read_file, get_gitignore_spec
@@ -52,10 +52,7 @@ def analyze_python_file(file_path: str, project_path: Path) -> Dict[str, Any]:
         try:
             tree = ast.parse(content, filename=str(full_path))
         except SyntaxError as e:
-            return {
-                "error": f"Syntax error in {file_path}",
-                "details": f"Line {e.lineno}: {e.msg}"
-            }
+            return {"error": f"Syntax error in {file_path}", "details": f"Line {e.lineno}: {e.msg}"}
 
         analysis = {
             "file_path": file_path,
@@ -148,9 +145,15 @@ def get_project_summary(project_path: Path) -> Dict[str, Any]:
             pyproject_info = _parse_pyproject_toml(project_path / "pyproject.toml")
             if pyproject_info.get("dependencies"):
                 summary["dependencies"]["python"] = pyproject_info["dependencies"]
-                summary["frameworks"].extend(_detect_python_frameworks(pyproject_info["dependencies"]))
-                summary["testing_frameworks"].extend(_detect_python_test_frameworks(pyproject_info["dependencies"]))
-                summary["databases"].extend(_detect_python_databases(pyproject_info["dependencies"]))
+                summary["frameworks"].extend(
+                    _detect_python_frameworks(pyproject_info["dependencies"])
+                )
+                summary["testing_frameworks"].extend(
+                    _detect_python_test_frameworks(pyproject_info["dependencies"])
+                )
+                summary["databases"].extend(
+                    _detect_python_databases(pyproject_info["dependencies"])
+                )
 
         # Analyze package.json
         if (project_path / "package.json").exists():
@@ -158,7 +161,9 @@ def get_project_summary(project_path: Path) -> Dict[str, Any]:
             if package_info.get("dependencies"):
                 summary["dependencies"]["javascript"] = list(package_info["dependencies"].keys())
                 summary["frameworks"].extend(_detect_js_frameworks(package_info["dependencies"]))
-                summary["testing_frameworks"].extend(_detect_js_test_frameworks(package_info["dependencies"]))
+                summary["testing_frameworks"].extend(
+                    _detect_js_test_frameworks(package_info["dependencies"])
+                )
 
         # Detect architecture patterns
         summary["architecture_indicators"] = _detect_architecture_patterns(project_path)
@@ -203,7 +208,7 @@ def find_related_files(file_path: str, project_path: Path) -> Dict[str, Any]:
         else:
             return {
                 "file_path": file_path,
-                "message": f"Relationship analysis not yet supported for {ext} files"
+                "message": f"Relationship analysis not yet supported for {ext} files",
             }
 
     except Exception as e:
@@ -211,6 +216,7 @@ def find_related_files(file_path: str, project_path: Path) -> Dict[str, Any]:
 
 
 # Helper functions for AST extraction
+
 
 def _extract_imports(tree: ast.AST) -> Dict[str, List[str]]:
     """Extract imports categorized by type."""
@@ -221,9 +227,25 @@ def _extract_imports(tree: ast.AST) -> Dict[str, List[str]]:
     }
 
     stdlib_modules = {
-        "os", "sys", "json", "re", "time", "datetime", "pathlib", "typing",
-        "collections", "itertools", "functools", "asyncio", "subprocess",
-        "logging", "unittest", "argparse", "dataclasses", "abc", "enum"
+        "os",
+        "sys",
+        "json",
+        "re",
+        "time",
+        "datetime",
+        "pathlib",
+        "typing",
+        "collections",
+        "itertools",
+        "functools",
+        "asyncio",
+        "subprocess",
+        "logging",
+        "unittest",
+        "argparse",
+        "dataclasses",
+        "abc",
+        "enum",
     }
 
     for node in ast.walk(tree):
@@ -310,10 +332,12 @@ def _extract_globals(tree: ast.AST) -> List[Dict[str, Any]]:
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name):
-                    globals_list.append({
-                        "name": target.id,
-                        "line_number": node.lineno,
-                    })
+                    globals_list.append(
+                        {
+                            "name": target.id,
+                            "line_number": node.lineno,
+                        }
+                    )
 
     return globals_list
 
@@ -362,6 +386,7 @@ def _get_base_class_name(base: ast.expr) -> str:
 
 
 # Helper functions for project analysis
+
 
 def _parse_requirements(req_file: Path) -> List[str]:
     """Parse requirements.txt file."""
