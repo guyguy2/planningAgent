@@ -1,12 +1,13 @@
 """Main CLI entry point for PlanCode."""
 
-import os
 from pathlib import Path
 from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.panel import Panel
+
+from plancode.auth import get_api_key, setup_api_key_interactive
 
 app = typer.Typer(
     name="plancode",
@@ -68,11 +69,16 @@ def plan(
     # Set project directory
     project_path = project if project else Path.cwd()
 
-    # Check for API key
-    api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        console.print("[red]Error: ANTHROPIC_API_KEY environment variable not set[/red]")
-        raise typer.Exit(1)
+    # Get API key with flexible authentication
+    # This will try multiple sources and provide helpful error messages
+    api_key, source = get_api_key(
+        allow_interactive=False,
+        require_key=True,
+        project_path=project_path,
+    )
+
+    if api_key:
+        console.print(f"[dim]Using API key from: {source}[/dim]")
 
     # Display banner
     console.print(
@@ -86,7 +92,7 @@ def plan(
         console.print(f"\n[yellow]Resuming from plan: {resume}[/yellow]")
         from plancode.agent.loop import resume_plan
 
-        resume_plan(resume, project_path, model)
+        resume_plan(resume, project_path, model, api_key=api_key)
     else:
         console.print(f"\n[bold]Task:[/bold] {task}")
         console.print(f"[bold]Project:[/bold] {project_path}")
@@ -103,6 +109,7 @@ def plan(
             model=model,
             analyze_only=analyze_only,
             save_plan_path=save_plan,
+            api_key=api_key,
         )
 
 
@@ -142,6 +149,31 @@ def init(
     else:
         gitignore.write_text(gitignore_entry)
         console.print("[green]Created .gitignore with .plancode/[/green]")
+
+
+@app.command()
+def setup(
+    path: Optional[Path] = typer.Option(
+        None,
+        "--project",
+        "-p",
+        help="Project directory for project-specific setup",
+    )
+):
+    """
+    Interactive setup wizard for configuring API key authentication.
+
+    This command helps you set up your Anthropic API key through various methods:
+    - Environment variable (recommended)
+    - File in home directory
+    - Project-specific file (less secure)
+
+    Example:
+        plancode setup
+        plancode setup --project ./my-app
+    """
+    project_path = path if path else Path.cwd()
+    setup_api_key_interactive(project_path=project_path)
 
 
 if __name__ == "__main__":

@@ -29,8 +29,8 @@ cd planningAgent
 # Install with uv
 uv sync
 
-# Set up your Anthropic API key
-export ANTHROPIC_API_KEY=your_key_here
+# Set up authentication (see Authentication section below)
+uv run plancode setup
 ```
 
 ## Quick Start
@@ -162,8 +162,40 @@ PlanCode provides Claude with these tools:
 
 ## Configuration
 
-### Environment Variables
-- `ANTHROPIC_API_KEY` - Your Anthropic API key (required)
+### Authentication
+
+PlanCode supports flexible authentication with multiple options:
+
+#### Option 1: Environment Variable (Recommended)
+```bash
+export ANTHROPIC_API_KEY='your-api-key-here'
+# Add to ~/.bashrc or ~/.zshrc to persist
+```
+
+#### Option 2: API Key File
+```bash
+echo 'your-api-key-here' > ~/.anthropic_key
+chmod 600 ~/.anthropic_key  # Secure the file
+export ANTHROPIC_API_KEY_FILE=~/.anthropic_key
+```
+
+#### Option 3: Interactive Setup
+```bash
+uv run plancode setup
+# Follow the interactive wizard to configure authentication
+```
+
+#### Option 4: Claude Code Environment
+When running PlanCode within a Claude Code session, no separate API key is needed. PlanCode will automatically detect the Claude Code environment and use the existing session.
+
+#### Option 5: Project-Specific Key (Less Secure)
+```bash
+# Not recommended for production
+echo 'your-api-key-here' > .plancode/api_key
+chmod 600 .plancode/api_key
+```
+
+**Get your API key**: Visit [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
 
 ### Project Initialization
 Run `uv run plancode init` in your project to create:
